@@ -66,29 +66,31 @@ module WashOutHelper
 
     if param.struct?
       if !defined.include?(param.basic_type)
-        xml.tag! "xsd:complexType", :name => param.basic_type do
-          attrs, elems = [], []
-          param.map.each do |value|
-            more << value if value.struct?
-            if value.attribute?
-              attrs << value
-            else
-              elems << value
-            end
-          end
-
-          if elems.any?
-            xml.tag! "xsd:sequence" do
-              elems.each do |value|
-                xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+        # xml.tag! "xsd:element", :name => "#{param.basic_type}" do
+          xml.tag! "xsd:complexType", :name => "#{param.basic_type}" do
+            attrs, elems = [], []
+            param.map.each do |value|
+              more << value if value.struct?
+              if value.attribute?
+                attrs << value
+              else
+                elems << value
               end
             end
-          end
 
-          attrs.each do |value|
-            xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+            if elems.any?
+              xml.tag! "xsd:sequence" do
+                elems.each do |value|
+                  xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+                end
+              end
+            end
+
+            attrs.each do |value|
+              xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+            end
           end
-        end
+        # end
 
         defined << param.basic_type
       elsif !param.classified?
@@ -102,7 +104,12 @@ module WashOutHelper
   end
 
   def wsdl_occurence(param, inject, extend_with = {})
-    data = {"#{'xsi:' if inject}nillable" => 'true'}
+    data = {}
+
+    # unless param.attribute?
+    #   data["#{'xsi:' if inject}nillable"] = true
+    # end
+
     if param.multiplied
       data["#{'xsi:' if inject}minOccurs"] = 0
       data["#{'xsi:' if inject}maxOccurs"] = 'unbounded'

@@ -31,6 +31,10 @@ module WashOut
         @type         = 'struct'
         @map          = self.class.parse_def(soap_config, type.wash_out_param_map)
         @source_class = type
+      elsif type.is_a?(OpenStruct)
+        @type         = 'struct'
+        @basic_type   = type.soap_type_name
+        @map          = self.class.parse_def(soap_config, type.soap_map)
       else
         @type = 'struct'
         @map  = self.class.parse_def(soap_config, type)
@@ -101,6 +105,7 @@ module WashOut
     end
 
     def basic_type
+      return @basic_type unless @basic_type.nil?
       return name unless classified?
       return source_class.wash_out_param_name(@soap_config)
     end
