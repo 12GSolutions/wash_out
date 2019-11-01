@@ -66,31 +66,14 @@ module WashOutHelper
 
     if param.struct?
       if !defined.include?(param.basic_type)
-        # xml.tag! "xsd:element", :name => "#{param.basic_type}" do
-          xml.tag! "xsd:complexType", :name => "#{param.basic_type}" do
-            attrs, elems = [], []
-            param.map.each do |value|
-              more << value if value.struct?
-              if value.attribute?
-                attrs << value
-              else
-                elems << value
-              end
-            end
-
-            if elems.any?
-              xml.tag! "xsd:sequence" do
-                elems.each do |value|
-                  xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
-                end
-              end
-            end
-
-            attrs.each do |value|
-              xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
-            end
+        # binding.pry
+        if param.as_element
+          xml.tag! "xsd:element", :name => "#{param.basic_type}" do
+            complex_type(xml, param, more)
           end
-        # end
+        else
+          complex_type(xml, param, more, "#{param.basic_type}")
+        end
 
         defined << param.basic_type
       elsif !param.classified?
@@ -115,5 +98,35 @@ module WashOutHelper
       data["#{'xsi:' if inject}maxOccurs"] = 'unbounded'
     end
     extend_with.merge(data)
+  end
+
+  private
+
+  def complex_type(xml, param, more, name = nil)
+    args = {}
+    args[:name] = name unless name.nil?
+    xml.tag! "xsd:complexType", args do
+      attrs, elems = [], []
+      param.map.each do |value|
+        more << value if value.struct?
+        if value.attribute?
+          attrs << value
+        else
+          elems << value
+        end
+      end
+
+      if elems.any?
+        xml.tag! "xsd:sequence" do
+          elems.each do |value|
+            xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+          end
+        end
+      end
+
+      attrs.each do |value|
+        xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+      end
+    end
   end
 end

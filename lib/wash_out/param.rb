@@ -8,16 +8,19 @@ module WashOut
     attr_accessor :value
     attr_accessor :source_class
     attr_accessor :soap_config
+    attr_accessor :as_element
 
     # Defines a WSDL parameter with name +name+ and type specifier +type+.
     # The type specifier format is described in #parse_def.
-    def initialize(soap_config, name, type, multiplied = false)
+    def initialize(soap_config, args)#name, type, multiplied = false)
+      type = args[:type]
       type ||= {}
       @soap_config = soap_config
-      @name       = name.to_s
-      @raw_name   = name.to_s
+      @name       = args[:name].to_s
+      @raw_name   = args[:name].to_s
       @map        = {}
-      @multiplied = multiplied
+      @multiplied = args[:multiplied]
+      @as_element = args[:as_element]
 
       if soap_config.camelize_wsdl.to_s == 'lower'
         @name = @name.camelize(:lower)
@@ -28,6 +31,8 @@ module WashOut
       if type.is_a?(Symbol)
         @type = type.to_s
       elsif type.is_a?(Class)
+        # binding.pry
+
         @type         = 'struct'
         @map          = self.class.parse_def(soap_config, type.wash_out_param_map)
         @source_class = type
@@ -118,7 +123,7 @@ module WashOut
 
     # Returns a WSDL namespaced identifier for this type.
     def namespaced_type
-      struct? ? "tns:#{basic_type}" : "xsd:#{xsd_type}"
+      struct? ? "#{basic_type}" : "xsd:#{xsd_type}"
     end
 
     # Parses a +definition+. The format of the definition is best described
@@ -137,9 +142,11 @@ module WashOut
     # +:parameter_name+ is ignored.
     #
     # This function returns an array of WashOut::Param objects.
-    def self.parse_def(soap_config, definition)
+    def self.parse_def(soap_config, definition, as_element=false)
       raise RuntimeError, "[] should not be used in your params. Use nil if you want to mark empty set." if definition == []
       return [] if definition == nil
+
+      # binding.pry
 
       if definition.is_a?(Class) && definition.ancestors.include?(WashOut::Type)
         definition = definition.wash_out_param_map
@@ -154,9 +161,19 @@ module WashOut
           if opt.is_a? WashOut::Param
             opt
           elsif opt.is_a? Array
-            WashOut::Param.new(soap_config, name, opt[0], true)
+            WashOut::Param.new(soap_config, {
+              name: name,
+              type: opt[0],
+              multiplied: true,
+              as_element: as_element
+            })
           else
-            WashOut::Param.new(soap_config, name, opt)
+            WashOut::Param.new(soap_config, {
+              name: name,
+              type: opt,
+              multiplied: false,
+              as_element: as_element
+            })
           end
         end
       else

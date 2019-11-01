@@ -79,7 +79,11 @@ describe WashOut::Param do
       type = :foo
       multiplied = "of course"
 
-      param = WashOut::Param.new(soap_config, 'name', type, multiplied)
+      param = WashOut::Param.new(soap_config, {
+        name: 'name',
+        type: type,
+        multiplied: multiplied
+      })
       param.source_class = "middle class"
       evil_clone = param.flat_copy
 

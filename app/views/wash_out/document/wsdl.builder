@@ -1,7 +1,5 @@
 xml.instruct!
 xml.tag! "wsdl:definitions", 'xmlns:wsdl' => 'http://schemas.xmlsoap.org/wsdl/',
-                'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                'xmlns:soap' => 'http://schemas.xmlsoap.org/wsdl/soap/',
                 'xmlns:wsu' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd',
                 'xmlns:wsp' => 'http://schemas.xmlsoap.org/ws/2004/09/policy',
                 'name' => @name,
@@ -16,7 +14,7 @@ xml.tag! "wsdl:definitions", 'xmlns:wsdl' => 'http://schemas.xmlsoap.org/wsdl/',
   end
 
   xml.tag! "wsdl:types" do
-    xml.tag! "xsd:schema", :xmlns => 'http://www.w3.org/2001/XMLSchema' do
+    xml.tag! "xsd:schema", :"xmlns:xsd" => 'http://www.w3.org/2001/XMLSchema' do
       defined = []
       @map.each do |operation, formats|
         (formats[:in] + formats[:out]).each do |p|
@@ -49,19 +47,17 @@ xml.tag! "wsdl:definitions", 'xmlns:wsdl' => 'http://schemas.xmlsoap.org/wsdl/',
   end
 
   xml.tag! "wsdl:binding", :name => "#{@name}_binding", :type => "tns:#{@name}_port" do
-    xml.tag! "soap:binding", :style => 'document', :transport => 'http://schemas.xmlsoap.org/soap/http', :style => "document"
+    xml.tag! "soap:binding", :"xmlns:soap"=>"http://schemas.xmlsoap.org/wsdl/soap/", :style => 'document', :transport => 'http://schemas.xmlsoap.org/soap/http', :style => "document"
     @map.keys.each do |operation|
       xml.tag! "wsdl:operation", :name => operation do
-        xml.tag! "soap:operation", :soapAction => operation
+        xml.tag! "soap:operation", :"xmlns:soap"=>"http://schemas.xmlsoap.org/wsdl/soap/", :soapAction => operation
         xml.tag! "wsdl:input" do
-          xml.tag! "soap:body",
+          xml.tag! "soap:body", :"xmlns:soap"=>"http://schemas.xmlsoap.org/wsdl/soap/",
             :use => "literal"
-            # ,:namespace => @namespace
         end
         xml.tag! "wsdl:output" do
-          xml.tag! "soap:body",
+          xml.tag! "soap:body", :"xmlns:soap"=>"http://schemas.xmlsoap.org/wsdl/soap/",
             :use => "literal"
-            # ,:namespace => @namespace
         end
       end
     end
@@ -69,7 +65,7 @@ xml.tag! "wsdl:definitions", 'xmlns:wsdl' => 'http://schemas.xmlsoap.org/wsdl/',
 
   xml.tag! "wsdl:service", :name => @service_name do
     xml.tag! "wsdl:port", :name => "#{@name}_port", :binding => "tns:#{@name}_binding" do
-      xml.tag! "soap:address", :location => WashOut::Router.url(request, @name)
+      xml.tag! "soap:address", :"xmlns:soap"=>"http://schemas.xmlsoap.org/wsdl/soap/", :location => WashOut::Router.url(request, @name)
     end
   end
 end
