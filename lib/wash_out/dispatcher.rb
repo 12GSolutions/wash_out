@@ -30,6 +30,7 @@ module WashOut
       request.env['WSSE_TOKEN'] = username_token.with_indifferent_access unless username_token.blank?
     end
     def _map_soap_parameters
+      Rails.logger.warn("SOAP Data:\n#{xml_data}")
       self.params = _load_params action_spec[:in],
         _strip_empty_nodes(action_spec[:in], xml_data)
     end
