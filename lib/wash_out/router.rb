@@ -51,6 +51,8 @@ module WashOut
 
       soap_action = controller.soap_config.soap_action_routing ? env['HTTP_SOAPACTION'].to_s.gsub(/^"(.*)"$/, '\1')
                                                                : ''
+      Rails.logger.warn("wash_out:router -- HTTP_SOAPACTION = \n#{env['HTTP_SOAPACTION']}")
+
       if soap_action.blank?
         parsed_soap_body = nori(controller.soap_config.snakecase_input).parse(soap_body env)
         return nil if parsed_soap_body.blank?
@@ -59,6 +61,7 @@ module WashOut
         soap_action = soap_action.values_at(:body, :Body).try(:compact).try(:first) if soap_action
         soap_action = soap_action.keys.first.to_s if soap_action
       end
+      Rails.logger.warn("wash_out:router -- soap_action = \n#{soap_action}")
 
       # RUBY18 1.8 does not have force_encoding.
       soap_action.force_encoding('UTF-8') if soap_action.respond_to? :force_encoding
